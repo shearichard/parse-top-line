@@ -37,7 +37,7 @@ from topconstants import *
 
 RGXSTR = r"""(\d+(?:\.\d+)?)(.*)"""
 dicproblems = {}
-dicmultiplers = {'g': 1024*1024, 'm':1024}
+dicmultiplers = {'g': 1024*1024*1024, 'm':1024*1024}
 
 
 def dehumanise_size(sz, rgx_compile_obj):
@@ -126,7 +126,7 @@ def analyse_json_for_stats(dic_bl_analysis):
     print(f'''Number of PIDs : {len(tl_keys)} .''')
     #
     for pk in tl_keys:
-        dic_status = {}
+        dic_status = make_empty_status_dic()
         virt_min = sys.maxsize * 2 + 1 
         virt_max = 0
         perc_mem_min = sys.maxsize * 2 + 1 
@@ -150,6 +150,7 @@ def analyse_json_for_stats(dic_bl_analysis):
         duration_tuple = divmod(len(dic_bl_analysis[pk].keys()), 60)
         print(f'''Log entries for {pk}: {len(dic_bl_analysis[pk].keys())} (Therefore, probably {duration_tuple[0]}:{duration_tuple[1]:02}). Virt in range {"{:,}".format(virt_min)} to {"{:,}".format(virt_max)}. %_MEM in range {perc_mem_min} to {perc_mem_max}.''')
         pprint.pprint(dic_status)
+        print("")
 
 
 def dump_json_to_tmp(dic_in):
@@ -168,6 +169,18 @@ def dump_json_to_tmp(dic_in):
 
 def make_job_list():
     return [{'desc':'baseline', 'infile':configconstants.TOPLOGBASELINE}, {'desc':'serial', 'infile':configconstants.TOPLOGSERIAL}]
+
+def make_empty_status_dic():
+
+    dicout={}
+    dicout['D'] = 0 
+    dicout['I'] = 0 
+    dicout['R'] = 0 
+    dicout['S'] = 0 
+    dicout['T'] = 0 
+    dicout['t'] = 0 
+    dicout['Z'] = 0 
+    return dicout
 
 def main():
     for job in make_job_list():
