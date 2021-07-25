@@ -1,8 +1,8 @@
 # ptl : Parse Top Line
 
-Parses output of the top utility when top has been run in batch mode to produce a more usable output.
+Parses the output of the top utility when top has been run in batch mode. The end result is easier to make sense of for a human and better suited to later processing. 
 
-As it currently exists this project is very specic to my needs which centre upon comparing the memory usage of two different modes of running an executable. In one mode the executable is asked to all the processing necessary in one go, in the second mode things are arranged so that the executable is asked to run three times and each time part of the necessary processing is completed. It's unlikely these are your requirements but perhaps this project might help you if you have related needs.
+As it currently exists this project is very specific to my needs which centre upon comparing the memory usage of two different modes of running an executable. In one mode the executable is asked to do all the processing necessary in one go, in the second mode things are arranged so that the executable is asked to run three times and each time part of the necessary processing is completed. It's unlikely these are your requirements but perhaps this project might help you if you have related needs.
 
 ## configconstants File
 
@@ -20,4 +20,4 @@ TOPLOGSERIAL='''top-output-serial.log'''
 
 This project makes use of pipenv, see the documentation for usage directions - https://pipenv.pypa.io/en/latest/basics/ . 
 
-This project has been tested against Python 3.7 on Ubuntu.
+This project has been tested against Python 3.7 and 3.8 on Ubuntu.
