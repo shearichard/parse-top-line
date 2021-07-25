@@ -20,6 +20,7 @@ Here's a sample of the file:
   19168 www-data  20   0 6562276 106116  92232 S  58.4   0.2   0:00.68 foon.REAL
   19159 www-data  20   0    3740   2880   2612 S   0.0   0.0   0:00.00 foon
 '''
+import sys
 import json
 import re
 import os
@@ -28,6 +29,7 @@ import csv
 from decimal import *
 import math
 import tempfile
+import pprint
 
 
 import configconstants
@@ -95,20 +97,44 @@ def parsetoplog(pathtotoplog):
                     print(topoutput)
                     raise
                 #
-                dicout[topoutput[PID]][idx] = { 'VIRT': topoutput[VIRT],
+                dicout[topoutput[PID]][idx] = { 'VIRT': virt,
                                                 'RES': res, 
                                                 'SHR': shr,
                                                 'PR':  pr,
+                                                'VIRT_READABLE': "{:,}".format(virt),
                                                 'RES_READABLE': "{:,}".format(res),
                                                 'SHR_READABLE': "{:,}".format(shr),
                                                 'PR_READABLE': "{:,}".format(pr),
                                                 'S':  topoutput[S],
-                                                'PERC_MEM':  topoutput[PERC_MEM]
+                                                'PERC_MEM':  float(topoutput[PERC_MEM])
                                                 } 
             #
             idx+=1
 
     return dicout
+
+
+def analyse_json_for_stats(dic_bl_analysis):
+    tl_keys = dic_bl_analysis.keys()
+    print(f'''Number of PIDs : {len(tl_keys)} .''')
+    #
+    for pk in tl_keys:
+        virt_min = sys.maxsize * 2 + 1 
+        virt_max = 0
+        perc_mem_min = sys.maxsize * 2 + 1 
+        perc_mem_max = 0
+        for _ , tld in dic_bl_analysis[pk].items():
+            if Decimal(tld['VIRT']) < virt_min:
+                virt_min = tld['VIRT']
+            if Decimal(tld['VIRT']) > virt_max:
+                virt_max = tld['VIRT']
+            if Decimal(tld['PERC_MEM']) < perc_mem_min:
+                perc_mem_min = tld['PERC_MEM']
+            if Decimal(tld['PERC_MEM']) > perc_mem_max:
+                perc_mem_max = tld['PERC_MEM']
+
+        duration_tuple = divmod(len(dic_bl_analysis[pk].keys()), 60)
+        print(f'''Log entries for {pk}: {len(dic_bl_analysis[pk].keys())} (Therefore, probably {duration_tuple[0]}:{duration_tuple[1]}). Virt in range {"{:,}".format(virt_min)} to {"{:,}".format(virt_max)}. %_MEM in range {perc_mem_min} to {perc_mem_max}.''')
 
 
 def dump_json_to_tmp(dic_in):
@@ -128,6 +154,7 @@ def dump_json_to_tmp(dic_in):
 def main():
     dic_bl_analysis = parsetoplog(Path(os.path.join(configconstants.DIRDATA,configconstants.TOPLOGBASELINE)))
     path_to_output = dump_json_to_tmp(dic_bl_analysis)
+    dic_stats = analyse_json_for_stats(dic_bl_analysis)
     print(path_to_output)
 
 
