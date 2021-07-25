@@ -126,11 +126,18 @@ def analyse_json_for_stats(dic_bl_analysis):
     print(f'''Number of PIDs : {len(tl_keys)} .''')
     #
     for pk in tl_keys:
+        dic_status = {}
         virt_min = sys.maxsize * 2 + 1 
         virt_max = 0
         perc_mem_min = sys.maxsize * 2 + 1 
         perc_mem_max = 0
         for _ , tld in dic_bl_analysis[pk].items():
+            #import pdb;pdb.set_trace()
+            if tld['S'] not in dic_status:
+                dic_status[tld['S']] = 1
+            else:
+                dic_status[tld['S']] += 1
+            #
             if Decimal(tld['VIRT']) < virt_min:
                 virt_min = tld['VIRT']
             if Decimal(tld['VIRT']) > virt_max:
@@ -142,6 +149,7 @@ def analyse_json_for_stats(dic_bl_analysis):
 
         duration_tuple = divmod(len(dic_bl_analysis[pk].keys()), 60)
         print(f'''Log entries for {pk}: {len(dic_bl_analysis[pk].keys())} (Therefore, probably {duration_tuple[0]}:{duration_tuple[1]:02}). Virt in range {"{:,}".format(virt_min)} to {"{:,}".format(virt_max)}. %_MEM in range {perc_mem_min} to {perc_mem_max}.''')
+        pprint.pprint(dic_status)
 
 
 def dump_json_to_tmp(dic_in):
