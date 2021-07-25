@@ -44,19 +44,22 @@ def dehumanise_size(sz, rgx_compile_obj):
     '''
     Take values such as '23.1g' and turn it into plain numbers
     '''
-    try:
-        szout = int(sz)
-    except ValueError:
-        match_obj = rgx_compile_obj.search(sz)
-        numeric_component = match_obj.group(1)
-        unit_component = match_obj.group(2)
-        #
-        if unit_component in dicmultiplers:
-            szout = math.floor(Decimal(numeric_component) * dicmultiplers[unit_component])
-        else:
-            raise ValueError(f"Unknown unit used when trying to convert {sz} to humanized version")
-    except:
-        raise
+    if sz == "":
+        szout = -1
+    else:
+        try:
+            szout = int(sz)
+        except ValueError:
+            match_obj = rgx_compile_obj.search(sz)
+            numeric_component = match_obj.group(1)
+            unit_component = match_obj.group(2)
+            #
+            if unit_component in dicmultiplers:
+                szout = math.floor(Decimal(numeric_component) * dicmultiplers[unit_component])
+            else:
+                raise ValueError(f"Unknown unit used when trying to convert {sz} to humanized version")
+        except:
+            raise
 
     return szout
 
@@ -82,32 +85,36 @@ def parsetoplog(pathtotoplog):
     with open(pathtotoplog, 'r') as f:
         reader=csv.reader(f , delimiter=' ', dialect='skip_space')
         for topoutput in reader: 
-            if topoutput[PID] not in dicout:
-                dicout[topoutput[PID]] = {}
-            #
-            if idx in dicout[topoutput[PID]]:
-                raise ValueError('There should never be duplicate key derived from idx')
+            if len(topoutput) != 12:
+                print("Skipping this line ...")
+                print(topoutput)
             else:
-                try:
-                    virt = dehumanise_size(topoutput[VIRT], rgx_compile_obj)
-                    res = dehumanise_size(topoutput[RES], rgx_compile_obj)
-                    shr = dehumanise_size(topoutput[SHR], rgx_compile_obj)
-                    pr = dehumanise_size(topoutput[PR], rgx_compile_obj)
-                except:
-                    print(topoutput)
-                    raise
+                if topoutput[PID] not in dicout:
+                    dicout[topoutput[PID]] = {}
                 #
-                dicout[topoutput[PID]][idx] = { 'VIRT': virt,
-                                                'RES': res, 
-                                                'SHR': shr,
-                                                'PR':  pr,
-                                                'VIRT_READABLE': "{:,}".format(virt),
-                                                'RES_READABLE': "{:,}".format(res),
-                                                'SHR_READABLE': "{:,}".format(shr),
-                                                'PR_READABLE': "{:,}".format(pr),
-                                                'S':  topoutput[S],
-                                                'PERC_MEM':  float(topoutput[PERC_MEM])
-                                                } 
+                if idx in dicout[topoutput[PID]]:
+                    raise ValueError('There should never be duplicate key derived from idx')
+                else:
+                    try:
+                        virt = dehumanise_size(topoutput[VIRT], rgx_compile_obj)
+                        res = dehumanise_size(topoutput[RES], rgx_compile_obj)
+                        shr = dehumanise_size(topoutput[SHR], rgx_compile_obj)
+                        pr = dehumanise_size(topoutput[PR], rgx_compile_obj)
+                    except:
+                        print(topoutput)
+                        raise
+                    #
+                    dicout[topoutput[PID]][idx] = { 'VIRT': virt,
+                                                    'RES': res, 
+                                                    'SHR': shr,
+                                                    'PR':  pr,
+                                                    'VIRT_READABLE': "{:,}".format(virt),
+                                                    'RES_READABLE': "{:,}".format(res),
+                                                    'SHR_READABLE': "{:,}".format(shr),
+                                                    'PR_READABLE': "{:,}".format(pr),
+                                                    'S':  topoutput[S],
+                                                    'PERC_MEM':  float(topoutput[PERC_MEM])
+                                                    } 
             #
             idx+=1
 
@@ -134,7 +141,7 @@ def analyse_json_for_stats(dic_bl_analysis):
                 perc_mem_max = tld['PERC_MEM']
 
         duration_tuple = divmod(len(dic_bl_analysis[pk].keys()), 60)
-        print(f'''Log entries for {pk}: {len(dic_bl_analysis[pk].keys())} (Therefore, probably {duration_tuple[0]}:{duration_tuple[1]}). Virt in range {"{:,}".format(virt_min)} to {"{:,}".format(virt_max)}. %_MEM in range {perc_mem_min} to {perc_mem_max}.''')
+        print(f'''Log entries for {pk}: {len(dic_bl_analysis[pk].keys())} (Therefore, probably {duration_tuple[0]}:{duration_tuple[1]:02}). Virt in range {"{:,}".format(virt_min)} to {"{:,}".format(virt_max)}. %_MEM in range {perc_mem_min} to {perc_mem_max}.''')
 
 
 def dump_json_to_tmp(dic_in):
@@ -151,11 +158,17 @@ def dump_json_to_tmp(dic_in):
     return output_path
 
 
+def make_job_list():
+    return [{'desc':'baseline', 'infile':configconstants.TOPLOGBASELINE}, {'desc':'serial', 'infile':configconstants.TOPLOGSERIAL}]
+
 def main():
-    dic_bl_analysis = parsetoplog(Path(os.path.join(configconstants.DIRDATA,configconstants.TOPLOGBASELINE)))
-    path_to_output = dump_json_to_tmp(dic_bl_analysis)
-    dic_stats = analyse_json_for_stats(dic_bl_analysis)
-    print(path_to_output)
+    for job in make_job_list():
+        print(f'''Processing {job['desc']}''')
+        dic_bl_analysis = parsetoplog(Path(os.path.join(configconstants.DIRDATA, job['infile'])))
+        path_to_output = dump_json_to_tmp(dic_bl_analysis)
+        dic_stats = analyse_json_for_stats(dic_bl_analysis)
+        print(path_to_output)
+        print("")
 
 
 if __name__ == "__main__":
