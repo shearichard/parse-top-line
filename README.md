@@ -15,3 +15,9 @@ DIRDATA='''../data/dirwithoutputin/'''
 TOPLOGBASELINE='''top-output-baseline.log'''
 TOPLOGSERIAL='''top-output-serial.log'''
 ```
+
+## Environment
+
+This project makes use of pipenv, see the documentation for usage directions - https://pipenv.pypa.io/en/latest/basics/ . 
+
+This project has been tested against Python 3.7 on Ubuntu.
